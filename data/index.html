@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Florian Langer">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script type="text/javascript" src="mainScript.js"></script>
+
+  <title >ESP8266 control</title>
+  
+</head>
+<body>
+  <h1>Desk Hue Control</h1>
+  <h3>Pick a color </h3>
+  <div class="wheel" id="colorWheelDemo"></div>
+  
+  <script>
+  
+  var absScreenWid = window.innerWidth;
+  var colorWheelWid = absScreenWid * 0.6;
+  if(colorWheelWid >= window.innerHeight *0.5) {
+    colorWheelWid = window.innerHeight *0.5;
+    var newPaddingLeft = ((window.innerWidth - colorWheelWid) / 2) * (100/window.innerWidth);
+    document.getElementById("colorWheelDemo").style.paddingLeft = Math.round(newPaddingLeft) + "%";
+  }
+
+var colorWheel = iro.ColorPicker("#colorWheelDemo", {
+  width: colorWheelWid,
+  color: '#fff',
+  padding: 10,
+  handleRadius: 8,
+  handleOrigin: {
+    x: 0,
+    y: 0
+  },
+  wheelLightness: true,
+  wheelAngle: 0, // starting angle
+  wheelDirection: 'anticlockwise', // clockwise/anticlockwise
+  sliderHeight: undefined,
+  sliderMargin: 12,
+  display: 'block', // CSS display value
+});
+var connection = new WebSocket('ws://' + location.hostname + ':81/', ['arduino']);
+//var connection = new WebSocket('ws://192.168.0.115:81');
+
+  connection.onopen = function () {
+    connection.send('Connect ' + new Date());
+  };
+  connection.onerror = function (error) {
+    console.log('WebSocket Error ', error);
+  };
+  connection.onmessage = function (e) {
+    console.log('Server: ', e.data);
+  };
+  connection.onclose = function () {
+    console.log('WebSocket connection closed');
+  };
+
+  colorWheel.on('input:change', function(color, changes){
+      var newColor = color.rgb;
+      var rgb = newColor.r << 16 | newColor.g << 8 | newColor.b;
+      var rgbstr = '#' + rgb.toString(16);
+      console.log(rgbstr);
+      connection.send(rgbstr);
+  })
+
+</script>
+</body>
+</html>
+<style media="screen">
+/*Styling of Body, HTML, and Headings */
+body, html {
+  height: 100%;
+  margin: 0;
+  font-size: 16px;
+  font-family: "Lato", sans-serif;
+  font-weight: 400px
+  color: #666;
+  background-color: #f4f4f4;
+}
+h1 {
+  background-color: #282e34;
+  color: #ddd;
+  text-transform: capitalize;
+  text-align: center;
+  margin: 5%;
+  margin-top: 2%;
+  padding: 2%;
+}
+h3 {
+  margin-left: 5%;
+}
+.wheel {
+  padding-left: 20%;
+  } 
+</style>
